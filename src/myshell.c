@@ -3,8 +3,10 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
 #include "myshell.h"
-
 
 int main(int argc, char * argv[])
 {
@@ -14,19 +16,64 @@ int main(int argc, char * argv[])
     readlink("/proc/self/exe", path_to_shell, buff_size); /* find path of current shell executable "./myshell" */
     setenv("shell", path_to_shell, 1); /* changes "shell" environment string to full path of shell executable */
 
-    /* start command prompt */
-    prompt();
+    /* start command promp depending if commands are from a file
+    or user input */
+    if (argc > 1) {
+        prompt_filename(argv);
+    }
+    else {
+        prompt();
+    }
 
     free(path_to_shell);
     return 1;
 }
 
+/* prompt used when given a file with commands in arguments */
+void prompt_filename(char * input[])
+{
+    FILE * fn;
+    char * line = NULL;
+    ssize_t len = 0;
+    char ** args;
+    int command = 1; /* 0 = empty command, 1 = default, 2 = invalid command */
+
+    fn = fopen(input[1], "r");
+    if (fn == NULL) {
+        printf("File does not exist");
+        exit(EXIT_FAILURE);
+    }
+
+    while (getline(&line, &len, fn) != -1) {
+        printf("=> ");
+        printf("%s", line);
+        args = split_input(line);
+        command = check_command(args);
+
+        if (command == 2) {
+            printf("Invalid command entered, please enter valid command\n");
+            printf("Use help to read user manual\n");
+            command = 1;
+        }
+        else if (command == 0) {
+            printf("\n");
+            command = 1;
+        }
+    }
+
+    fclose(fn);
+    if (line) {
+        free(line);
+    }
+    exit(EXIT_SUCCESS);
+}
+
+/* Normal prompt that takes user inputs */
 void prompt(void)
 {
     char * input;
     char ** args;
     int command = 1; /* 0 = empty command, 1 = default, 2 = invalid command */
-    int i = 0;
 
     while (1) {
         printf("=> ");
@@ -41,7 +88,7 @@ void prompt(void)
         }
         else if (command == 0) {
             printf("\n");
-            command == 1;
+            command = 1;
         }
     }
 }
@@ -72,6 +119,7 @@ char * read_input(void)
     return input;
 }
 
+/* function to split input into an array */
 #define BUFFSIZE 64
 #define SEPARATORS " \t\r\n\a"
 char **split_input(char *input)
@@ -86,14 +134,14 @@ char **split_input(char *input)
         exit(EXIT_FAILURE);
     }
 
-    token = strtok(input, SEPARATORS);
+    token = strtok(input, SEPARATORS); /* splits the input into an array by whitespace */
     while (token != NULL) {
     tokens[i] = token;
     i++;
 
     if (i >= buff_size) {
         buff_size += BUFFSIZE;
-        tokens = realloc(tokens, buff_size * sizeof(char*));
+        tokens = realloc(tokens, buff_size * sizeof(char*)); /* reallocate more memory if needed */
         if (!tokens) {
             fprintf(stderr, "Memory allocation failed.\n");
             exit(EXIT_FAILURE);
@@ -108,9 +156,15 @@ char **split_input(char *input)
 
 /* ============================================================================================= */
 
+
+
+/* ============================================================================================= */
+/* BUILT-IN COMMANDS */
+
 /* function to check if arguments are built-in commands
 and run commands if they are */
-int builtin(char **args) {
+int builtin(char **args)
+{
     /* an array of commands */
     char * commands[8] = {
         "help",
@@ -158,8 +212,6 @@ int builtin(char **args) {
     return 1;
 }
 
-/* ============================================================================================= */
-/* BUILT-IN COMMANDS */
 
 /* read user manual */
 void builtin_help(char **args)
@@ -218,7 +270,7 @@ void builtin_environ(char **args)
     int i = 0;
 
     while (environ[i]) {
-        printf("%s\n", environ[i++]);
+        printf("%s\n", environ[i]);
         i++;
     }
 }
@@ -256,6 +308,129 @@ void builtin_quit(char **args)
 
 /* ============================================================================================= */
 
+
+/* ============================================================================================= */
+/* Executing programss */
+
+int execute(int amp, char ** args)
+{
+    pid_t pid;
+    int status;
+
+    pid = fork();
+
+    /* child process */
+    if (pid == 0) {
+        /* execute the program */
+        if (execvp(args[0], args) < 0) {
+            /* If execution failed throw error message and continue prompt */
+            perror("could not execute program");
+            return 1;
+        }
+
+    }
+
+    /* forking error */
+    else if (pid < 0) {
+        perror("forking error");
+        return 1;
+    }
+
+    /* parent */
+    else {
+        /* wait forchild to execute if there is an ampersand */
+        if (amp == 0) {
+            waitpid(pid, &status, WUNTRACED);
+        }
+    }
+    return 1;
+}
+
+/* function for executing programs with I/O redirection */
+int execute_io(char ** args)
+{
+    pid_t pid;
+    int status;
+    FILE * fn;
+    FILE * fo;
+
+    pid = fork();
+
+    /* child process */
+    if (pid == 0) {
+        /* reading input from file and writing output to output file */
+        if (!strcmp(args[1], "<") && !strcmp(args[3], ">")) {
+            fn = freopen(args[2], "r", stdin); /* change stdin stream with file for reading */
+            fo = freopen(args[4], "w", stdout); /* change stdout stream with file for writing output */
+            if (execvp(args[0], args) < 0) {
+                /* If execution failed throw error message and continue prompt */
+                perror("could not execute program");
+                return 1;
+            }
+            fclose(fn);
+            fclose(fo);
+        }
+        /* reading input from file and appending output to output file */
+        else if (!strcmp(args[1], "<") && !strcmp(args[3], ">>")) {
+            fn = freopen(args[2], "r", stdin);
+            fo = freopen(args[4], "a", stdout);
+            if (execvp(args[0], args) < 0) {
+                /* If execution failed throw error message and continue prompt */
+                perror("could not execute program");
+                return 1;
+            }
+            fclose(fn);
+            fclose(fo);
+        }
+        /* reading input from file only */
+        else if (!strcmp(args[1], "<")) {
+            fn = freopen(args[2], "r", stdin);
+            if (execvp(args[0], args) < 0) {
+                /* If execution failed throw error message and continue prompt */
+                perror("could not execute program");
+                return 1;
+            }
+            fclose(fn);
+        }
+        /* writing input to file only */
+        else if (!strcmp(args[1], ">")) {
+            fn = freopen(args[2], "w", stdout);
+            if (execvp(args[0], args) < 0) {
+                /* If execution failed throw error message and continue prompt */
+                perror("could not execute program");
+                return 1;
+            }
+            fclose(fn);
+        }
+        /* appending output to file */
+        else if (!strcmp(args[1], ">>")) {
+            fn = freopen(args[2], "a", stdout);
+            if (execvp(args[0], args) < 0) {
+                /* If execution failed throw error message and continue prompt */
+                perror("could not execute program");
+                return 1;
+            }
+            fclose(fn);
+        }
+    }
+
+    /* forking error */
+    else if (pid < 0) {
+        perror("forking error");
+        return 1;
+    }
+
+    /* parent */
+    else {
+        /* wait for child to execute */
+        waitpid(pid, &status, WUNTRACED);
+    }
+    return 1;
+}
+
+/* ============================================================================================= */
+
+
 int check_command(char **args)
 {
     /* If entered command is whitespace */
@@ -265,6 +440,24 @@ int check_command(char **args)
 
     if (builtin(args)) {
         return 1;
+    }
+
+    /* Find out if file is an executable */
+    struct stat sb;
+    if (stat(args[0], &sb) == 0 && sb.st_mode & S_IXUSR) {
+        /* check if array size is less than 3 for I/O redirection*/
+        if (args[2] == NULL) {
+            if (args[1] == NULL) {
+                return execute(0, args);
+            }
+            else {
+                return execute(1, args);
+            }
+        }
+        /* If args bigger than 2 then it might be program with I/O redirection */
+        else {
+            return execute_io(args);
+        }
     }
 
     free(args);
