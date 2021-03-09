@@ -1,4 +1,4 @@
-======================================================================================================================================
+======================================================================================================================
 Name: Mark Kevin Queypo
 Student Number: 19404214
 
@@ -6,10 +6,10 @@ Student Number: 19404214
 
 I hereby declare that all information in this assignment has been obtained and presented in accordance with academic rules and ethical conduct and the work I am submitting in the files, except where I have indicated is my own work.
 
-======================================================================================================================================
+======================================================================================================================
 
 NOTES: - Run in main directory not in "/bin" to use  "help"
-      - The shell can take a file of commands and run them using "bin/myshell batchfile" where batchfile
+       - The shell can take a file of commands and run them using "bin/myshell batchfile" where batchfile
         is the file with a list of commands
 
 
