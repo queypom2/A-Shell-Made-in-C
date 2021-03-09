@@ -71,14 +71,17 @@ used with simple commands or with executing programs. Redirections are processed
 shell the symbols use for redirection are "<", ">" and ">>" where:
 
 - <
+
     Usage: Program < input
     Description: takes input and gives it to program
 
 - >
+
     Usage: Command/Program > output
     Description: Output from command or program is sent to output
 
 - >>
+
     Usage: Command/Program >> output
     Description: Output from command or program is appended to output
 
