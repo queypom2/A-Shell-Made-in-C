@@ -48,16 +48,18 @@ void prompt_filename(char * input[])
     }
 
     while (getline(&line, &len, fn) != -1) {
-        printf("=> ");
-        printf("%s", line);
+        printf("=> "); /* Command prompt symbol */
+        printf("%s", line); /* print command feom file after prompt */
         args = split_input(line);
         command = check_command(args);
 
+        /* If command is 2 throw an error and set command to 1 again */
         if (command == 2) {
             printf("Invalid command entered, please enter valid command\n");
             printf("Use help to read user manual\n");
             command = 1;
         }
+        /* Command is 0 if empty command is entered, print a new line and prompt the user again */
         else if (command == 0) {
             printf("\n");
             command = 1;
@@ -79,16 +81,18 @@ void prompt(void)
     int command = 1; /* 0 = empty command, 1 = default, 2 = invalid command */
 
     while (1) {
-        printf("=> ");
+        printf("=> "); /* Command prompt symbol */
         input = read_input();
         args = split_input(input);
         command = check_command(args);
 
+        /* If command is 2 throw an error and set command to 1 again */
         if (command == 2) {
             printf("Invalid command entered, please enter valid command\n");
             printf("Use help to read user manual\n");
             command = 1;
         }
+        /* Command is 0 if empty command is entered, print a new line and prompt the user again */
         else if (command == 0) {
             printf("\n");
             command = 1;
