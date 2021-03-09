@@ -216,7 +216,42 @@ int builtin(char **args)
 /* read user manual */
 void builtin_help(char **args)
 {
-    system("more ../manual/readme.md");
+    FILE * fn;
+    FILE * fo;
+    char * line = NULL;
+    size_t len = 0;
+
+    /* if nothing after command like redirection symbols then output manual */
+    if (args[1] == NULL) {
+        system("more manual/readme.md");
+    }
+
+    /* for outputing help output to file */
+    else if (!strcmp(args[1], ">")) {
+        fn = fopen(args[2], "w");
+        fo = fopen("manual/readme.md", "r");
+        if (fo == NULL) {
+            printf("Error with file");
+        }
+        while(getline(&line, &len, fo) != -1) {
+            fputs(line, fn);
+        }
+        fclose(fn);
+        fclose(fo);
+    }
+    /* appending to file */
+    else if (!strcmp(args[1], ">>")) {
+        fn = fopen(args[2], "w");
+        fo = fopen("manual/readme.md", "r");
+        if (fo == NULL) {
+            printf("Error with file");
+        }
+        while(getline(&line, &len, fo) != -1) {
+            fputs(line, fn);
+        }
+        fclose(fn);
+        fclose(fo);
+    }
 }
 
 /* clear command line */
@@ -243,23 +278,72 @@ void builtin_cd(char **args)
 void builtin_dir(char **args)
 {
     char start[] = "ls -al ";
+    FILE * fn, * outfile;
+    char dir[500];
 
-    if (args[1] != NULL) {
+    if (args[1] != NULL && strcmp(args[1], ">")) {
         char * full = calloc(strlen(start) + strlen(args[1]), sizeof(char*));
 
         if (full == NULL) {
             printf("Memory not allocated.\n");
         }
+
+        /* concatenate the start and the end which is the directory you would like to list */
         else {
             strcat(full, start);
             strcat(full, args[1]);
-            system(full);
-            free(full);
+
+            /* for directing output to file writing and appending */
+            if (args[2] != NULL && !strcmp(args[2], ">")) {
+                fn = popen(full, "r"); /* popen is basically the system call turned into a file */
+                while (fgets(dir, sizeof(dir), fn) != NULL){
+                    fputs(dir, outfile); /* puts output to output file */
+                }
+                pclose(fn);
+                fclose(outfile);
+            }
+            /* same function as above but for appending */
+            else if (args[2] != NULL && !strcmp(args[2], ">>")) {
+                fn = popen(full, "a");
+                while (fgets(dir, sizeof(dir), fn) != NULL){
+                    fputs(dir, outfile);
+                }
+                pclose(fn);
+                fclose(outfile);
+            }
+
+            else {
+                system(full);
+                free(full);
+            }
         }
+
     }
 
+    /* If no directory to list specified, list current directory */
     else {
-        system(start);
+        /* for directing output to file writing and appending */
+        if (args[1] != NULL && !strcmp(args[1], ">")) {
+            fn = popen(start, "r");
+            outfile = fopen(args[2], "w");
+            while (fgets(dir, sizeof(dir), fn) != NULL){
+                fputs(dir, outfile);
+            }
+            pclose(fn);
+            fclose(outfile);
+        }
+        else if (args[2] != NULL && !strcmp(args[2], ">>")) {
+            fn = popen(start, "r");
+            while (fgets(dir, sizeof(dir), fn) != NULL){
+                fputs(dir, outfile);
+            }
+            pclose(fn);
+            fclose(outfile);
+        }
+
+        else {
+            system(start);
+        }
     }
 }
 
@@ -267,11 +351,25 @@ void builtin_dir(char **args)
 void builtin_environ(char **args)
 {
     extern char **environ;
+    FILE * fn;
     int i = 0;
 
-    while (environ[i]) {
-        printf("%s\n", environ[i]);
-        i++;
+    /* For sending output to file) */
+    if (args[1] != NULL && (!strcmp(args[1], ">") || !strcmp(args[1], ">>"))) {
+        fn = fopen(args[2], "a");
+        while (environ[i]){
+            fputs(environ[i], fn);
+            fputs("\n", fn);
+            i++;
+        }
+        fclose(fn);
+    }
+
+    else if (args[1] == NULL){
+        while (environ[i]) {
+            printf("%s\n", environ[i]);
+            i++;
+    }
     }
 }
 
@@ -279,10 +377,49 @@ void builtin_environ(char **args)
 void builtin_echo(char **args)
 {
     int i = 1;
+    int j = 0;
 
-    while (args[i] != NULL) {
-        printf("%s ", args[i]);
+    /* for sending/ appending ouput to output file */
+    FILE * fn;
+
+    /* check if args has a redirection symbol */
+    while (args[i] != NULL && strcmp(args[i], ">") && strcmp(args[i], ">>")) {
         i++;
+    }
+
+    if (args[i] != NULL && !strcmp(args[i], ">")) {
+        j = 1;
+        fn = fopen(args[i + 1], "w"); /* file is after the redirect symbol */
+        /* print everything before ">" which is at index i */
+        while (j < i) {
+            fputs(args[j], fn);
+            fputs(" ", fn);
+            j++;
+        }
+        fputs("\n", fn);
+        fclose(fn);
+    }
+    /* appending */
+    else if (args[i] != NULL && !strcmp(args[i], ">>")) {
+        j = 1;
+        fn = fopen(args[i + 1], "a"); /* file is after the redirect symbol */
+        /* print everything before ">" which is at index i */
+        while (j < i) {
+            fputs(args[j], fn);
+            fputs(" ", fn);
+            j++;
+        }
+        fputs("\n", fn);
+        fclose(fn);
+    }
+
+    /* if no redirection found print output */
+    else {
+        j = 1;
+        while (args[j] != NULL) {
+            printf("%s ", args[j]);
+            j++;
+        }
     }
     printf("\n");
 }
@@ -290,12 +427,10 @@ void builtin_echo(char **args)
 /* function to pause operation of shell until Enter is pressed */
 void builtin_pause(char **args)
 {
+    printf("Press enter to continue..");
     while (1) {
         if (getchar() == '\n') {
             break;
-        }
-        else {
-            sleep(1);
         }
     }
 }
