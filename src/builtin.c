@@ -70,15 +70,28 @@ void builtin_help(char **args)
     char * line = NULL;
     size_t len = 0;
 
+    char * dir;
+    char * path;
+
+    /* for the help function this requires it to be in the bin directory
+    So I need to use the shell environment variable to change to that directory*/
+    path = getenv("shell");
+
+    /* search for executable in shell environ and replace executable with empty string
+    to to go to the directory */
+    dir = strstr(path, "\\myshell.exe");
+    strncpy(dir, "", 1);
+    chdir(path); /* change to that directory */
+
     /* if nothing after command like redirection symbols then output manual */
     if (args[1] == NULL) {
-        system("more manual/readme.md");
+        system("more ../manual/readme.md");
     }
 
     /* for outputing help output to file */
     else if (!strcmp(args[1], ">")) {
         fn = fopen(args[2], "w");
-        fo = fopen("manual/readme.md", "r");
+        fo = fopen("../manual/readme.md", "r");
         if (fo == NULL) {
             printf("Error with file");
         }
@@ -91,7 +104,7 @@ void builtin_help(char **args)
     /* appending to file */
     else if (!strcmp(args[1], ">>")) {
         fn = fopen(args[2], "w");
-        fo = fopen("manual/readme.md", "r");
+        fo = fopen("../manual/readme.md", "r");
         if (fo == NULL) {
             printf("Error with file");
         }
@@ -101,6 +114,10 @@ void builtin_help(char **args)
         fclose(fn);
         fclose(fo);
     }
+
+    chdir(getenv("PWD")); /* when done change back to directory you were on */
+    strcat(path, "\\myshell.exe"); /* add the executable to environ shell again */
+
 }
 
 /* clear command line */
