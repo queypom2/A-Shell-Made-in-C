@@ -9,8 +9,7 @@ I hereby declare that all information in this assignment has been obtained and p
 
 ============================================================================================================
 
-NOTES: - Run in main directory not in "/bin" to use  "help"
-       - The shell can take a file of commands and run them using "bin/myshell batchfile" where batchfile
+NOTES: - The shell can takea batchfile of commands and run them using "bin/myshell batchfile" where batchfile
         is the file with a list of commands
 
 
