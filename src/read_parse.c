@@ -33,6 +33,7 @@ char * read_input(void)
 }
 
 /* function to split input into an array */
+/* taken and modified from brennan.io: https://brennan.io/2015/01/16/write-a-shell-in-c/ */
 #define BUFFSIZE 64
 #define SEPARATORS " \t\r\n\a"
 char **split_input(char *input)
@@ -48,20 +49,21 @@ char **split_input(char *input)
     }
 
     token = strtok(input, SEPARATORS); /* splits the input into an array by whitespace */
+    /* go through token and add it to array tokens */
     while (token != NULL) {
-    tokens[i] = token;
-    i++;
+        tokens[i] = token;
+        i++;
 
-    if (i >= buff_size) {
-        buff_size += BUFFSIZE;
-        tokens = realloc(tokens, buff_size * sizeof(char*)); /* reallocate more memory if needed */
-        if (!tokens) {
-            fprintf(stderr, "Memory allocation failed.\n");
-            exit(EXIT_FAILURE);
+        if (i >= buff_size) {
+            buff_size += BUFFSIZE;
+            tokens = realloc(tokens, buff_size * sizeof(char*)); /* reallocate more memory if needed */
+            if (!tokens) {
+                fprintf(stderr, "Memory allocation failed.\n");
+                exit(EXIT_FAILURE);
+            }
         }
-    }
 
-    token = strtok(NULL, SEPARATORS);
+        token = strtok(NULL, SEPARATORS);
     }
     tokens[i] = NULL;
     return tokens;

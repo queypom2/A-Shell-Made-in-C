@@ -79,7 +79,7 @@ void builtin_help(char **args)
 
     /* search for executable in shell environ and replace executable with empty string
     to to go to the directory */
-    dir = strstr(path, "\\myshell.exe");
+    dir = strstr(path, "\\myshell");
     strncpy(dir, "", 1);
     chdir(path); /* change to that directory */
 
@@ -116,7 +116,7 @@ void builtin_help(char **args)
     }
 
     chdir(getenv("PWD")); /* when done change back to directory you were on */
-    strcat(path, "\\myshell.exe"); /* add the executable to environ shell again */
+    strcat(path, "\\myshell"); /* add the executable to environ shell again */
 
 }
 
