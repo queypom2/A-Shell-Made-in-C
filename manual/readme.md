@@ -9,7 +9,7 @@ I hereby declare that all information in this assignment has been obtained and p
 
 ============================================================================================================
 
-NOTES: - The shell can takea batchfile of commands and run them using "bin/myshell batchfile" where batchfile
+NOTES: - The shell can take a batchfile of commands and run them using "bin/myshell batchfile" where batchfile
         is the file with a list of commands
 
 
@@ -46,7 +46,7 @@ The command executed directly  without invoking another program.
 
 - help
     Usage: help
-    Description: Shows the user manual from manual direactory ("manual/readme.md)
+    Description: Shows the user manual from manual directory ("manual/readme.md)
 
 - pause
     Usage: pause
