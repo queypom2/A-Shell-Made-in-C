@@ -33,7 +33,7 @@ char * read_input(void)
 }
 
 /* function to split input into an array */
-/* taken and modified from brennan.io: https://brennan.io/2015/01/16/write-a-shell-in-c/ */
+/* this function is taken and modified from brennan.io: https://brennan.io/2015/01/16/write-a-shell-in-c/ */
 #define BUFFSIZE 64
 #define SEPARATORS " \t\r\n\a"
 char **split_input(char *input)
