@@ -88,13 +88,13 @@ shell the symbols use for redirection are "<", ">" and ">>" where:
     Usage: Command/Program >> output
     Description: Output from command or program is appended to output
 
-Note it is posible to use both "<" and ">" (or ">>) like below:
+Note it is possible to use both "<" and ">" (or ">>) like below:
 
 - Program < input > output
 
                                             Processes (Background)
 
-In a Unix shell, processes revolves around two system calls: fork() and exec(), the shell translates commands into a series of sytem calls. When a process is created, the parent process calls fork() is cnd creates a child process which is a clone of the parent. The parent receives the child process's PID (Process ID) numberas it's return value for fork() while the child process is given a PID of "0". The system call exec() is then called which replaces the current process with different program. [3]
+In a Unix shell, processes revolves around two system calls: fork() and exec(), the shell translates commands into a series of sytem calls. When a process is created, the parent process calls fork() and creates a child process which is a clone of the parent. The parent receives the child process's PID (Process ID) which is it's return value for fork() while the child process is given a PID of "0". The system call exec() is then called which replaces the current process with different program. [3]
 
 When programs call fork() and returns value of system call. The parent process creates children processes. It then calls wait() on the child process ID and waits until child process terminates.
 
