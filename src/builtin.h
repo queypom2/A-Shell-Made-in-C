@@ -7,3 +7,4 @@ void builtin_environ(char **args);
 void builtin_echo(char **args);
 void builtin_pause(char **args);
 void builtin_quit(char **args);
+void builtin_remove(char **args);

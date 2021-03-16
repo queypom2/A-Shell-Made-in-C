@@ -9,8 +9,7 @@ I hereby declare that all information in this assignment has been obtained and p
 
 ============================================================================================================
 
-NOTES: - Run in main directory not in "/bin" to use  "help"
-       - The shell can take a file of commands and run them using "bin/myshell batchfile" where batchfile
+NOTES: - The shell can take a file of commands and run them using "bin/myshell batchfile" where batchfile
         is the file with a list of commands
 
 
@@ -56,6 +55,10 @@ The command executed directly  without invoking another program.
 - quit
     Usage: quit
     Description: Terminates the shell
+
+- rm
+    Usage: rm <filename>
+    Description: deletes a given file
 
 
                                             Program Execution and I/O Redirection

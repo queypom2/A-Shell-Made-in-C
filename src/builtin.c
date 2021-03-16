@@ -16,7 +16,7 @@ and run commands if they are */
 int builtin(char **args)
 {
     /* an array of commands */
-    char * commands[8] = {
+    char * commands[9] = {
         "help",
         "clr",
         "cd",
@@ -24,14 +24,15 @@ int builtin(char **args)
         "environ",
         "echo",
         "pause",
-        "quit"
+        "quit",
+        "rm"
     };
 
     /* function pointer type */
     typedef void (*f)(char **);
 
     /* An array of buil-in functions */
-    f command_array[8] = {
+    f command_array[9] = {
         &builtin_help,
         &builtin_clear,
         &builtin_cd,
@@ -39,13 +40,14 @@ int builtin(char **args)
         &builtin_environ,
         &builtin_echo,
         &builtin_pause,
-        &builtin_quit
+        &builtin_quit,
+        &builtin_remove
     };
 
     int i;
 
     /* checks the command list if it matches */
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < 9; i++) {
         if (!strcmp(commands[i], args[0])) {
             break;
         }
@@ -53,7 +55,7 @@ int builtin(char **args)
 
     /* if it's over the number of list of commands then it's not
     a built-in command */
-    if (i >= 8) {
+    if (i >= 9) {
         return 0;
     }
 
@@ -324,4 +326,18 @@ void builtin_pause(char **args)
 void builtin_quit(char **args)
 {
     exit(0);
+}
+
+/* function to remove a file */
+void builtin_remove(char **args)
+{
+    /* check if arguments are given */
+    if (args[1] != NULL) {
+        if (remove(args[1]) == -1) { /* if remove() returns a non-zero value, the file does not exist */
+            perror("File does not exist");
+        }
+    }
+    else {
+        printf("Usage: rm <filename>\n");
+    }
 }
