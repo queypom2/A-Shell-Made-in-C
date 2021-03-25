@@ -32,7 +32,7 @@ int main(int argc, char * argv[])
     return 1;
 }
 
-/* prompt used when given a file with commands in arguments */
+/* prompt used when given a batchfile with commands in arguments */
 void prompt_filename(char * input[])
 {
     FILE * fn;
@@ -48,7 +48,8 @@ void prompt_filename(char * input[])
     }
 
     while (getline(&line, &len, fn) != -1) {
-        printf("=> "); /* Command prompt symbol */
+        printf("%s => ", getenv("PWD")); /* Command prompt symbol with current directory shown */
+        printf("=> ");
         printf("%s", line); /* print command feom file after prompt */
         args = split_input(line);
         command = check_command(args);
@@ -81,7 +82,8 @@ void prompt(void)
     int command = 1; /* 0 = empty command, 1 = default, 2 = invalid command */
 
     while (1) {
-        printf("=> "); /* Command prompt symbol */
+        printf("%s\n", getenv("PWD")); /*shows current directory */
+        printf("=> ");
         input = read_input();
         args = split_input(input);
         command = check_command(args);
